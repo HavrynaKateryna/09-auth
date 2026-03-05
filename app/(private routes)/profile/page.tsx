@@ -1,32 +1,40 @@
-import Link from "next/link";
 import css from "./ProfilePage.module.css";
-import { Metadata } from "next";
-import { getServerMe } from "@/lib/api/serverApi"; // ✅ импорт правильный
+import Link from "next/link";
+import Image from "next/image";
+import { getServerMe } from "@/lib/api/serverApi";
+import type { Metadata } from "next";
 
-export async function generateMetadata(): Promise<Metadata> {
+export const metadata: Metadata = {
+  title: "Profile",
+  description: "Profile",
+  openGraph: {
+    title: "Profile",
+    description: "Profile",
+    url: "/",
+    siteName: "NoteHub",
+    images: [
+      {
+        url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Profile",
+      },
+    ],
+    type: "article",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Profile",
+    description: "Profile",
+    images: [
+      "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+    ],
+  },
+};
+
+const Profile = async () => {
   const user = await getServerMe();
-  return {
-    title: `Info about: ${user.username}`,
-    description: `${user.avatar}`,
-    openGraph: {
-      type: "website",
-      url: `http://localhost:3000/profile`,
-      title: `Info about: ${user.username}`,
-      description: `${user.avatar}`,
-      images: [
-        {
-          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-          width: 600,
-          height: 300,
-          alt: "Notehub main logo",
-        },
-      ],
-    },
-  };
-}
 
-export default async function Profile() {
-  const user = await getServerMe(); // ✅ исправлено
   return (
     <main className={css.mainContent}>
       <div className={css.profileCard}>
@@ -42,19 +50,21 @@ export default async function Profile() {
           </Link>
         </div>
         <div className={css.avatarWrapper}>
-          <img
+          <Image
             src={user.avatar}
-            alt={user.username}
+            alt="User Avatar"
             width={120}
             height={120}
             className={css.avatar}
           />
         </div>
         <div className={css.profileInfo}>
-          <p>{`Username: ${user.username}`}</p>
-          <p>{`Email: ${user.email}`}</p>
+          <p>Name: {user.username}</p>
+          <p>Email: {user.email}</p>
         </div>
       </div>
     </main>
   );
-}
+};
+
+export default Profile;
