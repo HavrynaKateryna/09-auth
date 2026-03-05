@@ -1,5 +1,8 @@
 import axios from "./api";
-import { Note } from "@/types/note";
+import {
+  Note,
+  FetchNotesResponse,
+} from "@/types/note";
 
 export interface AuthData {
   email: string;
@@ -36,23 +39,30 @@ export const logout = async () => {
 };
 
 // ───── Заметки ─────
+
+// Теперь fetchNotes возвращает объект с notes и totalPages
 export const fetchNotes = async (
-  params?: Record<string, any>,
-) => {
-  const res = await axios.get<Note[]>("/notes", {
-    params,
+  query: string,
+  page: number,
+  tag: string,
+): Promise<FetchNotesResponse> => {
+  const res = await axios.get("/notes", {
+    params: { query, page, tag },
     withCredentials: true,
   });
-  return res.data;
+
+  return {
+    notes: res.data.notes, // массив заметок
+    totalPages: res.data.totalPages || 1, // количество страниц
+  };
 };
 
 export const fetchNoteById = async (
   id: string,
-) => {
-  const res = await axios.get<Note>(
-    `/notes/${id}`,
-    { withCredentials: true },
-  );
+): Promise<Note> => {
+  const res = await axios.get(`/notes/${id}`, {
+    withCredentials: true,
+  });
   return res.data;
 };
 
@@ -68,9 +78,8 @@ export const createNote = async (note: {
 };
 
 export const deleteNote = async (id: string) => {
-  const res = await axios.delete<Note>(
-    `/notes/${id}`,
-    { withCredentials: true },
-  );
+  const res = await axios.delete(`/notes/${id}`, {
+    withCredentials: true,
+  });
   return res.data;
 };
