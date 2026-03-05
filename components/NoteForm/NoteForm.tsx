@@ -10,7 +10,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { createNote } from "../../lib/api";
+import { createNote } from "../../lib/api/clientApi";
 import { useNoteDraftStore } from "@/lib/store/noteStore";
 import { useRouter } from "next/navigation";
 

@@ -1,4 +1,4 @@
-import { fetchNotes } from "@/lib/api";
+import { fetchNotes } from "@/lib/api/serverApi";
 import {
   dehydrate,
   HydrationBoundary,
@@ -9,7 +9,7 @@ import { Metadata } from "next";
 interface NotesPageProps {
   params: Promise<{ slug: string[] }>;
 }
-export async function generateMetadata({
+export async function generateMetaData({
   params,
 }: NotesPageProps): Promise<Metadata> {
   const { slug } = await params;

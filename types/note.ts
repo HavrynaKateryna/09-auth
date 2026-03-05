@@ -1,3 +1,5 @@
+import { AxiosError } from "axios";
+
 export interface Note {
   id: string;
   title: string;
@@ -17,3 +19,6 @@ export type NoteTag =
   | "Personal"
   | "Meeting"
   | "Shopping";
+export type ApiError = AxiosError<{
+  error: string;
+}>;
