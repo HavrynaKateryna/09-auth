@@ -2,46 +2,52 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { register } from "@/lib/api/clientApi";
+import {
+  register,
+  RegisterRequest,
+} from "@/lib/api/clientApi";
+import { ApiError } from "@/app/api/api";
+import { useAuthStore } from "@/lib/store/authStore";
 import css from "./SignUpPage.module.css";
 
-export default function SignUpPage() {
+const SignUp = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const setUser = useAuthStore(
+    (state) => state.setUser,
+  );
 
   const handleSubmit = async (
-    e: React.FormEvent,
+    formData: FormData,
   ) => {
-    e.preventDefault();
-    setError("");
-
-    if (password.length < 6) {
-      setError(
-        "Password must be at least 6 characters",
-      );
-      return;
-    }
-
     try {
-      await register({ email, password }); // POST /api/auth/register
-      router.push("/profile"); // редирект на профиль после успешной регистрации
-    } catch (err: any) {
+      const formValues = Object.fromEntries(
+        formData,
+      ) as RegisterRequest;
+      const res = await register(formValues);
+      if (res) {
+        setUser(res);
+        router.push("/profile");
+      } else {
+        setError("Invalid email or password");
+      }
+    } catch (error) {
       setError(
-        err?.response?.data?.message ||
-          "Registration failed",
+        (error as ApiError).response?.data
+          ?.error ??
+          (error as ApiError).message ??
+          "Oops... some error",
       );
     }
   };
 
   return (
     <main className={css.mainContent}>
-      <h1 className={css.formTitle}>Sign up</h1>
       <form
         className={css.form}
-        onSubmit={handleSubmit}
+        action={handleSubmit}
       >
+        <h1 className={css.formTitle}>Sign up</h1>
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
           <input
@@ -50,10 +56,6 @@ export default function SignUpPage() {
             name="email"
             className={css.input}
             required
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
           />
         </div>
 
@@ -67,11 +69,6 @@ export default function SignUpPage() {
             name="password"
             className={css.input}
             required
-            minLength={6}
-            value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
           />
         </div>
 
@@ -83,11 +80,12 @@ export default function SignUpPage() {
             Register
           </button>
         </div>
-
         {error && (
           <p className={css.error}>{error}</p>
         )}
       </form>
     </main>
   );
-}
+};
+
+export default SignUp;

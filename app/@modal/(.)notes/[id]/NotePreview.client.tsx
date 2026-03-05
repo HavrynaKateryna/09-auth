@@ -1,59 +1,85 @@
 "use client";
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
-import css from "./NotePreview.module.css";
+
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api/clientApi";
+import Loader from "./loading";
+import css from "./NotePreview.client.module.css";
+import ErrorMessage from "./error";
 import Modal from "@/components/Modal/Modal";
-interface NotePreviewClientProps {}
-export default function NotePreviewClient({}: NotePreviewClientProps) {
+
+interface NotePreviewClientProps {
+  id: string;
+}
+
+export default function NotePreviewClient({
+  id,
+}: NotePreviewClientProps) {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
-  const { data, isLoading, error } = useQuery({
+  const {
+    data: note,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["note", id],
     queryFn: () => fetchNoteById(id),
-    enabled: Boolean(id),
+    staleTime: 1000 * 60 * 5,
     refetchOnMount: false,
-    retry: false,
   });
+
+  const handleClose = () => router.back();
+
+  if (isLoading) {
+    return (
+      <Modal onClose={handleClose}>
+        <Loader />
+      </Modal>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Modal onClose={handleClose}>
+        <ErrorMessage error={error as Error} />
+      </Modal>
+    );
+  }
+
+  if (!note) {
+    return (
+      <Modal onClose={handleClose}>
+        <div className={css.notFoundWrapper}>
+          <h3>Note Not Found</h3>
+          <p>
+            The note you are looking for might
+            have been deleted or moved.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
-    <>
-      {isLoading && (
-        <p>Loading, please wait...</p>
-      )}
+    <Modal onClose={handleClose}>
+      <div className={css.container}>
+        <article className={css.item}>
+          <header className={css.header}>
+            <h2 className={css.title}>
+              {note.title}
+            </h2>
+            {note.tag && (
+              <span className={css.tag}>
+                {note.tag}
+              </span>
+            )}
+          </header>
 
-      {!isLoading && error && (
-        <p>Something went wrong.</p>
-      )}
-
-      {!isLoading && !error && data && (
-        <Modal onClose={() => router.back()}>
-          <div className={css.container}>
-            <button
-              className={css.backBtn}
-              onClick={() => router.back()}
-            >
-              Go Back
-            </button>
-            <div className={css.item}>
-              <div className={css.header}>
-                <h2>{data.title}</h2>
-              </div>
-              <p className={css.tag}>
-                {data.tag}
-              </p>
-              <p className={css.content}>
-                {data.content}
-              </p>
-              <p className={css.date}>
-                {data.createdAt}
-              </p>
-            </div>
+          <div className={css.content}>
+            {note.content}
           </div>
-        </Modal>
-      )}
-    </>
+        </article>
+      </div>
+    </Modal>
   );
 }

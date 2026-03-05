@@ -1,13 +1,25 @@
 "use client";
-interface ErrorProps {
+
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+
+interface ErrorMessageProps {
   error: Error;
 }
-export default function Error({
+
+export default function ErrorMessage({
   error,
-}: ErrorProps) {
+}: ErrorMessageProps) {
+  useEffect(() => {
+    toast.error(error.message);
+  }, [error]);
+
   return (
-    <p>
-      Could not fetch note details.{error.message}
-    </p>
+    <div>
+      <p>
+        Could not fetch note details.{" "}
+        {error.message}
+      </p>
+    </div>
   );
 }

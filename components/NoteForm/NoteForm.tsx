@@ -1,79 +1,87 @@
 "use client";
-import css from "./NoteForm.module.css";
 import { useId } from "react";
-import type {
-  NewNote,
-  NoteTag,
-} from "../../types/note";
+import { toast } from "react-hot-toast";
+import css from "./NoteForm.module.css";
+import { createNote } from "@/lib/api/clientApi";
+import { useRouter } from "next/navigation";
 import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { createNote } from "../../lib/api/clientApi";
 import { useNoteDraftStore } from "@/lib/store/noteStore";
-import { useRouter } from "next/navigation";
 
-export default function NoteForm() {
+export type NoteFormValues = {
+  title: string;
+  content: string;
+  tag: string;
+};
+
+interface NoteFormProps {
+  onCancel?: () => void;
+}
+
+export default function NoteForm({
+  onCancel,
+}: NoteFormProps) {
   const fieldId = useId();
-  const queryClient = useQueryClient();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { draft, setDraft, clearDraft } =
     useNoteDraftStore();
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["notes"],
-      });
-      clearDraft();
-      router.back();
-    },
-    onError: () => {
-      toast.error("Failed to create note");
-    },
-  });
-  const handleInputChanged = (
-    e: React.ChangeEvent<
+  const handleChange = (
+    event: React.ChangeEvent<
       | HTMLInputElement
       | HTMLTextAreaElement
       | HTMLSelectElement
     >,
   ) => {
-    const value = {
+    setDraft({
       ...draft,
-      [e.target.name]: e.target.value,
-    };
-    setDraft(value);
+      [event.target.name]: event.target.value,
+    });
   };
-  const handleSubmit = async (
-    formData: FormData,
-  ) => {
-    const newNote: NewNote = {
-      title: String(formData.get("title")),
-      content: String(formData.get("content")),
-      tag: formData.get("tag") as NoteTag,
-    };
-    createMutation.mutate(newNote);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      toast.success("Note created successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["notes"],
+      });
+      clearDraft();
+      router.push("/notes/filter/all");
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  const handleCancel = () =>
+    router.push("/notes/filter/all");
+  const handleSubmit = (formData: FormData) => {
+    const values = Object.fromEntries(
+      formData,
+    ) as NoteFormValues;
+    mutate(values);
   };
+
   return (
     <form
-      className={css.form}
       action={handleSubmit}
+      className={css.form}
     >
       <div className={css.formGroup}>
         <label htmlFor={`${fieldId}-title`}>
           Title
         </label>
         <input
-          id={`${fieldId}-title`}
           type="text"
+          defaultValue={draft?.title}
+          onChange={handleChange}
+          id={`${fieldId}-title`}
           name="title"
           className={css.input}
-          onChange={handleInputChanged}
-          defaultValue={draft.title}
         />
-        <span className={css.error} />
       </div>
 
       <div className={css.formGroup}>
@@ -81,14 +89,13 @@ export default function NoteForm() {
           Content
         </label>
         <textarea
+          defaultValue={draft?.content}
+          onChange={handleChange}
           id={`${fieldId}-content`}
           name="content"
           rows={8}
           className={css.textarea}
-          onChange={handleInputChanged}
-          defaultValue={draft.content}
         />
-        <span className={css.error} />
       </div>
 
       <div className={css.formGroup}>
@@ -96,11 +103,11 @@ export default function NoteForm() {
           Tag
         </label>
         <select
-          id={`${fieldId}-tag`}
+          defaultValue={draft?.tag}
+          onChange={handleChange}
           name="tag"
+          id={`${fieldId}-tag`}
           className={css.select}
-          onChange={handleInputChanged}
-          defaultValue={draft.tag}
         >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
@@ -112,22 +119,25 @@ export default function NoteForm() {
             Shopping
           </option>
         </select>
-        <span className={css.error} />
       </div>
 
       <div className={css.actions}>
         <button
           type="button"
           className={css.cancelButton}
-          onClick={() => router.back()}
+          onClick={handleCancel}
+          disabled={isPending}
         >
           Cancel
         </button>
         <button
           type="submit"
           className={css.submitButton}
+          disabled={isPending}
         >
-          Create note
+          {isPending
+            ? "Creating..."
+            : "Create note"}
         </button>
       </div>
     </form>

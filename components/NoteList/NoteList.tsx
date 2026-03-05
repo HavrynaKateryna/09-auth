@@ -1,11 +1,11 @@
 "use client";
-import type { Note } from "@/types/note";
-import css from "./NoteList.module.css";
 import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteNote } from "../../lib/api/clientApi";
+import { deleteNote } from "@/lib/api/clientApi";
+import { type Note } from "../../types/note";
+import css from "./NoteList.module.css";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
@@ -13,27 +13,32 @@ interface NoteListProps {
   notes: Note[];
 }
 
-export default function NoteList({
+export const NoteList = ({
   notes,
-}: NoteListProps) {
+}: NoteListProps) => {
   const queryClient = useQueryClient();
-  const { mutate } = useMutation({
-    mutationFn: deleteNote,
-    onSuccess() {
-      queryClient.invalidateQueries();
+
+  const mutation = useMutation({
+    mutationFn: (id: string) => deleteNote(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["notes"],
+      });
+      toast.success("Note deleted!");
     },
-    onError() {
-      toast.error(
-        "Sorry! Something went wrong!!!",
-      );
+    onError: () => {
+      toast.error("Failed to delete note.");
     },
   });
+
+  if (notes.length === 0) return null;
+
   return (
     <ul className={css.list}>
       {notes.map((note: Note) => (
         <li
-          className={css.listItem}
           key={note.id}
+          className={css.listItem}
         >
           <h2 className={css.title}>
             {note.title}
@@ -46,22 +51,27 @@ export default function NoteList({
               {note.tag}
             </span>
             <Link
-              className={css.link}
               href={`/notes/${note.id}`}
+              className={css.link}
             >
               View details
             </Link>
             <button
               className={css.button}
-              onClick={() => {
-                mutate(note.id);
-              }}
+              type="button"
+              aria-label={`Delete note: ${note.title}`}
+              onClick={() =>
+                mutation.mutate(note.id)
+              }
+              disabled={mutation.isPending}
             >
-              Delete
+              {mutation.isPending
+                ? "Deleting..."
+                : "Delete"}
             </button>
           </div>
         </li>
       ))}
     </ul>
   );
-}
+};

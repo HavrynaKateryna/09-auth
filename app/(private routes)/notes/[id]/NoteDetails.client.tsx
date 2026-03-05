@@ -1,54 +1,49 @@
 "use client";
+
+import { useQuery } from "@tanstack/react-query";
 import {
   useParams,
   useRouter,
 } from "next/navigation";
-import css from "./NoteDetails.module.css";
-import { useQuery } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api/clientApi";
 
-export default function NoteDetailsClient() {
-  const router = useRouter();
+const NoteDetailsClient = () => {
   const { id } = useParams<{ id: string }>();
-  const { data, isLoading, error } = useQuery({
+  const router = useRouter();
+
+  const {
+    data: note,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["note", id],
     queryFn: () => fetchNoteById(id),
-    enabled: Boolean(id),
     refetchOnMount: false,
-    retry: false,
   });
+
+  const handleGoBack = () => {
+    const isSure = confirm("Are you sure?");
+    if (isSure) {
+      router.back();
+    }
+  };
+
+  if (isLoading) return <p>Loading...</p>;
+
+  if (error || !note) return <p>Some error..</p>;
+
+  const formattedDate = note.updatedAt
+    ? `Updated at: ${note.updatedAt}`
+    : `Created at: ${note.createdAt}`;
+
   return (
-    <>
-      {isLoading && (
-        <p>Loading, please wait...</p>
-      )}
-
-      {!isLoading && error && (
-        <p>Something went wrong.</p>
-      )}
-
-      {!isLoading && !error && data && (
-        <div className={css.container}>
-          <button
-            className={css.backBtn}
-            onClick={() => router.back()}
-          >
-            Go Back
-          </button>
-          <div className={css.item}>
-            <div className={css.header}>
-              <h2>{data.title}</h2>
-            </div>
-            <p className={css.tag}>{data.tag}</p>
-            <p className={css.content}>
-              {data.content}
-            </p>
-            <p className={css.date}>
-              {data.createdAt}
-            </p>
-          </div>
-        </div>
-      )}
-    </>
+    <div>
+      <button onClick={handleGoBack}>Back</button>
+      <h2>{note.title}</h2>
+      <p>{note.content}</p>
+      <p>{formattedDate}</p>
+    </div>
   );
-}
+};
+
+export default NoteDetailsClient;

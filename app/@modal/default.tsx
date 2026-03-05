@@ -1,3 +1,3 @@
-export default function ModalNotePreview() {
+export default function Default() {
   return null;
 }

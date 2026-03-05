@@ -1,6 +1,7 @@
 .mainContent {
   flex: 1;
 }
+
 .form {
   display: flex;
   flex-direction: column;
@@ -13,6 +14,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
 .formTitle {
   font-size: 24px;
   font-weight: 600;
@@ -20,6 +22,7 @@
   margin-bottom: 8px;
   color: #212529;
 }
+
 .formGroup {
   display: flex;
   flex-direction: column;
@@ -27,6 +30,7 @@
   font-weight: 500;
   color: #212529;
 }
+
 .input {
   margin-top: 4px;
   padding: 8px 12px;
@@ -34,11 +38,13 @@
   border: 1px solid #ced4da;
   border-radius: 4px;
 }
+
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
+
 .submitButton {
   padding: 8px 16px;
   font-size: 16px;
@@ -49,13 +55,16 @@
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
+
 .submitButton:hover {
   background-color: #0d6efd;
 }
+
 .submitButton:disabled {
   background-color: #b1c7ae;
   cursor: not-allowed;
 }
+
 .error {
   color: #dc3545;
   font-size: 12px;

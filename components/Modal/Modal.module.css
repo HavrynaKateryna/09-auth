@@ -10,6 +10,7 @@
   justify-content: center;
   z-index: 1000;
 }
+
 .modal {
   background-color: #ffffff;
   padding: 24px;
@@ -18,4 +19,31 @@
   width: 100%;
   position: relative;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 32px;
+  height: 32px;
+  font-size: 28px;
+  line-height: 1;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-radius: 50%;
+}
+
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #ff3d00;
+  transform: scale(1.1);
+}
+
+.closeButton:active {
+  transform: scale(0.95);
 }

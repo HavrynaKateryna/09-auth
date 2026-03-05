@@ -1,78 +1,82 @@
 "use client";
 
 import { useState } from "react";
-import { useDebouncedCallback } from "use-debounce";
-import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import {
+  useQuery,
+  keepPreviousData,
+} from "@tanstack/react-query";
+import { useDebounce } from "use-debounce";
+import { Toaster } from "react-hot-toast";
 
+import { fetchNotes } from "@/lib/api/clientApi";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
-import NoteList from "@/components/NoteList/NoteList";
+import { NoteList } from "@/components/NoteList/NoteList";
+import Loader from "@/app/loading";
+import ErrorMessage from "@/app/(private routes)/notes/error";
 
-import {
-  fetchNotes,
-  FetchNotesResponse,
-} from "@/lib/api/clientApi";
-import { Note } from "@/types/note";
-
-import css from "./NotesPage.module.css";
+import css from "./Notes.client.module.css";
 
 interface NotesClientProps {
-  tag: string;
+  initialTag?: string;
 }
 
 export default function NotesClient({
-  tag,
+  initialTag,
 }: NotesClientProps) {
-  const [searchTerm, setSearchTerm] =
-    useState("");
+  const perPage = 12;
+  const [page, setPage] = useState<number>(1);
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const [debouncedQuery] = useDebounce(
+    query,
+    500,
+  );
 
-  // Запрос с React Query
-  const { data, isLoading, isError, isFetching } =
-    useQuery<FetchNotesResponse>({
-      queryKey: ["notes", { query, page, tag }],
-      queryFn: () => fetchNotes(query, page, tag),
-      refetchOnMount: false,
-      retry: false,
-    });
+  const {
+    data,
+    isLoading,
+    isError,
+    isSuccess,
+    error,
+  } = useQuery({
+    queryKey: [
+      "notes",
+      debouncedQuery,
+      page,
+      perPage,
+      initialTag,
+    ],
+    queryFn: () =>
+      fetchNotes({
+        search: debouncedQuery,
+        page,
+        perPage,
+        tag: initialTag,
+      }),
+    placeholderData: keepPreviousData,
+  });
 
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 0;
 
-  // Debounce для поиска
-  const debouncedQuery = useDebouncedCallback(
-    (value: string) => {
-      setQuery(value);
-      setPage(1);
-    },
-    500,
-  );
-
-  const handleSearch = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    debouncedQuery(value);
+  const handleSearch = (newQuery: string) => {
+    setQuery(newQuery);
+    setPage(1);
   };
 
   return (
     <div className={css.app}>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+      />
+
       <header className={css.toolbar}>
         <SearchBox
-          value={searchTerm}
+          value={query}
           onChange={handleSearch}
         />
-
-        {totalPages > 1 && (
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-        )}
 
         <Link
           href="/notes/action/create"
@@ -80,17 +84,39 @@ export default function NotesClient({
         >
           Create note +
         </Link>
+
+        {totalPages > 1 && (
+          <Pagination
+            totalPages={totalPages}
+            currentPage={page}
+            onChange={setPage}
+          />
+        )}
       </header>
 
-      {isLoading && <p>Loading...</p>}
-      {!isLoading && isFetching && (
-        <p>Updating...</p>
-      )}
-      {isError && <p>Something went wrong.</p>}
+      <main>
+        {isLoading && (
+          <div className={css.loaderWrapper}>
+            <Loader />
+          </div>
+        )}
 
-      {notes.length > 0 && !isError && (
-        <NoteList notes={notes} />
-      )}
+        {isError && (
+          <ErrorMessage error={error as Error} />
+        )}
+
+        {isSuccess && notes.length > 0 && (
+          <NoteList notes={notes} />
+        )}
+
+        {isSuccess &&
+          query !== "" &&
+          notes.length === 0 && (
+            <p className={css.info}>
+              No notes found...
+            </p>
+          )}
+      </main>
     </div>
   );
 }

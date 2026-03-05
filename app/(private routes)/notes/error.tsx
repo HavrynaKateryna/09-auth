@@ -7,7 +7,7 @@ interface ErrorMessageProps {
   error: Error;
 }
 
-export default function Error({
+export default function ErrorMessage({
   error,
 }: ErrorMessageProps) {
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function Error({
   return (
     <div>
       <p>
-        Could not fetch note details.{" "}
+        Could not fetch the list of notes.{" "}
         {error.message}
       </p>
     </div>
