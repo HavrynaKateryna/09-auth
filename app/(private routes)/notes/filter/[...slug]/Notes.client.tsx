@@ -1,4 +1,5 @@
 "use client";
+
 import SearchBox from "@/components/SearchBox/SearchBox";
 import css from "./NotesPage.module.css";
 import { fetchNotes } from "@/lib/api/clientApi";
@@ -15,6 +16,7 @@ import Link from "next/link";
 interface NotesClientProps {
   tag: string;
 }
+
 export default function NotesClient({
   tag,
 }: NotesClientProps) {
@@ -26,13 +28,16 @@ export default function NotesClient({
   const { data, isLoading, isError, isFetching } =
     useQuery({
       queryKey: ["notes", { query, page, tag }],
-      queryFn: () => fetchNotes(query, page, tag),
+      queryFn: () =>
+        fetchNotes({ query, page, tag }), // <-- исправлено
       placeholderData: keepPreviousData,
       refetchOnMount: false,
       retry: false,
     });
+
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 0;
+
   const debouncedQuery = useDebouncedCallback(
     (value: string) => {
       setQuery(value);
@@ -40,6 +45,7 @@ export default function NotesClient({
     },
     500,
   );
+
   const handleSearch = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -72,11 +78,12 @@ export default function NotesClient({
           Create note +
         </Link>
       </header>
+
       {isLoading && <p>Loading...</p>}
       {!isLoading && isFetching && (
         <p>Updating...</p>
       )}
-      {notes?.length > 0 && !isError && (
+      {notes.length > 0 && !isError && (
         <NoteList notes={notes} />
       )}
     </div>
