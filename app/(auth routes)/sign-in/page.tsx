@@ -8,7 +8,7 @@ import {
 } from "@/lib/api/clientApi";
 import { ApiError } from "@/app/api/api";
 import { useAuthStore } from "@/lib/store/authStore";
-import css from "./SighInPage.module.css";
+import css from "./SignInPage.module.css";
 
 const SignIn = () => {
   const router = useRouter();
