@@ -1,37 +1,32 @@
 "use client";
-
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 import css from "./NoteDetails.module.css";
+import { useQuery } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api/clientApi";
-import { Note } from "@/types/note"; // ✅ правильный импорт
 
-interface NoteDetailsClientProps {
-  noteId: string;
-}
-
-export default function NoteDetailsClient({
-  noteId,
-}: NoteDetailsClientProps) {
+export default function NoteDetailsClient() {
   const router = useRouter();
-
-  const { data, isLoading, error } =
-    useQuery<Note>({
-      queryKey: ["note", noteId],
-      queryFn: () => fetchNoteById(noteId),
-      enabled: Boolean(noteId),
-      refetchOnMount: false,
-      retry: false,
-    });
-
+  const { id } = useParams<{ id: string }>();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteById(id),
+    enabled: Boolean(id),
+    refetchOnMount: false,
+    retry: false,
+  });
   return (
     <>
       {isLoading && (
         <p>Loading, please wait...</p>
       )}
+
       {!isLoading && error && (
         <p>Something went wrong.</p>
       )}
+
       {!isLoading && !error && data && (
         <div className={css.container}>
           <button
