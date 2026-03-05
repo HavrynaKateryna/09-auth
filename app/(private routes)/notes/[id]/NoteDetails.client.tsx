@@ -3,10 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import css from "./NoteDetails.module.css";
-import {
-  fetchNoteById,
-  Note,
-} from "@/lib/api/clientApi";
+import { fetchNoteById } from "@/lib/api/clientApi";
+import { Note } from "@/types/note"; // <-- исправлено: импорт типа из types/note
 
 interface NoteDetailsClientProps {
   noteId: string;
