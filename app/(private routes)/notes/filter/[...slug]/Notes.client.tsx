@@ -1,17 +1,22 @@
 "use client";
 
-import SearchBox from "@/components/SearchBox/SearchBox";
-import css from "./NotesPage.module.css";
-import { fetchNotes } from "@/lib/api/clientApi";
-import {
-  keepPreviousData,
-  useQuery,
-} from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+
+import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteList from "@/components/NoteList/NoteList";
-import Link from "next/link";
+import { fetchNotes } from "@/lib/api/clientApi";
+import { Note } from "@/lib/api/clientApi";
+import css from "./NotesPage.module.css";
+
+// Тип данных, которые возвращает fetchNotes
+interface FetchNotesResponse {
+  notes: Note[];
+  totalPages: number;
+}
 
 interface NotesClientProps {
   tag: string;
@@ -25,19 +30,20 @@ export default function NotesClient({
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
+  // Запрос с React Query
   const { data, isLoading, isError, isFetching } =
-    useQuery({
+    useQuery<FetchNotesResponse>({
       queryKey: ["notes", { query, page, tag }],
-      queryFn: () =>
-        fetchNotes({ query, page, tag }), // <-- исправлено
-      placeholderData: keepPreviousData,
+      queryFn: () => fetchNotes(query, page, tag),
       refetchOnMount: false,
       retry: false,
+      keepPreviousData: true,
     });
 
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 0;
 
+  // Debounce для поиска
   const debouncedQuery = useDebouncedCallback(
     (value: string) => {
       setQuery(value);
@@ -62,17 +68,16 @@ export default function NotesClient({
           onChange={handleSearch}
         />
 
-        {data?.totalPages &&
-          data?.totalPages > 1 && (
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          )}
+        {totalPages > 1 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        )}
 
         <Link
-          href={"/notes/action/create"}
+          href="/notes/action/create"
           className={css.button}
         >
           Create note +
@@ -83,6 +88,8 @@ export default function NotesClient({
       {!isLoading && isFetching && (
         <p>Updating...</p>
       )}
+      {isError && <p>Something went wrong.</p>}
+
       {notes.length > 0 && !isError && (
         <NoteList notes={notes} />
       )}
