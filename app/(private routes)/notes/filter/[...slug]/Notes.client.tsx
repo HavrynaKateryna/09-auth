@@ -8,15 +8,14 @@ import Link from "next/link";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteList from "@/components/NoteList/NoteList";
-import { fetchNotes } from "@/lib/api/clientApi";
-import { Note } from "@/types/note";
-import css from "./NotesPage.module.css";
 
-// Тип данных, которые возвращает fetchNotes
-interface FetchNotesResponse {
-  notes: Note[];
-  totalPages: number;
-}
+import {
+  fetchNotes,
+  FetchNotesResponse,
+} from "@/lib/api/clientApi";
+import { Note } from "@/types/note";
+
+import css from "./NotesPage.module.css";
 
 interface NotesClientProps {
   tag: string;
@@ -34,11 +33,9 @@ export default function NotesClient({
   const { data, isLoading, isError, isFetching } =
     useQuery<FetchNotesResponse>({
       queryKey: ["notes", { query, page, tag }],
-      queryFn: () =>
-        fetchNotes({ query, page, tag }), // Передаем объект с параметрами
+      queryFn: () => fetchNotes(query, page, tag),
       refetchOnMount: false,
       retry: false,
-      keepPreviousData: true, // правильно внутри useQuery
     });
 
   const notes = data?.notes ?? [];

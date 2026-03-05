@@ -1,85 +1,94 @@
-import axios from "./api";
-import {
-  Note,
-  FetchNotesResponse,
-} from "@/types/note";
+import nextServer from "./api";
+import type { NewNote, Note } from "@/types/note";
+import type { User } from "@/types/user";
 
-export interface AuthData {
-  email: string;
-  password: string;
+export interface FetchNotesResponse {
+  notes: Note[];
+  totalPages: number;
 }
 
-// ───── Авторизация ─────
-export const register = async (
-  data: AuthData,
-) => {
-  const res = await axios.post(
-    "/auth/register",
-    data,
-    { withCredentials: true },
-  );
-  return res.data;
-};
+// ───── ЗАМЕТКИ ─────
+const ITEMS_PER_PAGE = 12;
 
-export const login = async (data: AuthData) => {
-  const res = await axios.post(
-    "/auth/login",
-    data,
-    { withCredentials: true },
-  );
-  return res.data;
-};
-
-export const logout = async () => {
-  await axios.post(
-    "/auth/logout",
-    {},
-    { withCredentials: true },
-  );
-};
-
-// ───── Заметки ─────
-
-// Теперь fetchNotes возвращает объект с notes и totalPages
 export const fetchNotes = async (
   query: string,
   page: number,
-  tag: string,
+  tag?: string,
 ): Promise<FetchNotesResponse> => {
-  const res = await axios.get("/notes", {
-    params: { query, page, tag },
-    withCredentials: true,
-  });
-
-  return {
-    notes: res.data.notes, // массив заметок
-    totalPages: res.data.totalPages || 1, // количество страниц
-  };
+  const res =
+    await nextServer.get<FetchNotesResponse>(
+      "/notes",
+      {
+        params: {
+          page,
+          perPage: ITEMS_PER_PAGE,
+          ...(query.trim()
+            ? { search: query }
+            : {}),
+          tag:
+            tag === "all" || !tag
+              ? undefined
+              : tag,
+        },
+      },
+    );
+  return res.data;
 };
 
 export const fetchNoteById = async (
   id: string,
 ): Promise<Note> => {
-  const res = await axios.get(`/notes/${id}`, {
-    withCredentials: true,
-  });
+  const res = await nextServer.get<Note>(
+    `/notes/${id}`,
+  );
   return res.data;
 };
 
-export const createNote = async (note: {
-  title: string;
-  content: string;
-  tag: string;
-}) => {
-  const res = await axios.post("/notes", note, {
-    withCredentials: true,
-  });
+export const createNote = async (
+  note: NewNote,
+): Promise<Note> => {
+  const res = await nextServer.post<Note>(
+    "/notes",
+    note,
+  );
   return res.data;
 };
 
-export const deleteNote = async (id: string) => {
-  const res = await axios.delete(`/notes/${id}`, {
-    withCredentials: true,
-  });
+export const deleteNote = async (
+  id: string,
+): Promise<Note> => {
+  const res = await nextServer.delete<Note>(
+    `/notes/${id}`,
+  );
   return res.data;
+};
+
+// ───── АВТОРИЗАЦИЯ ─────
+export interface UserRequest {
+  email: string;
+  password: string;
+}
+
+export const register = async (
+  userData: UserRequest,
+): Promise<User> => {
+  const { data } = await nextServer.post<User>(
+    "/auth/register",
+    userData,
+  );
+  return data;
+};
+
+export const login = async (
+  userData: UserRequest,
+): Promise<User> => {
+  const { data } = await nextServer.post<User>(
+    "/auth/login",
+    userData,
+  );
+  return data;
+};
+
+export const logout = async (): Promise<void> => {
+  await nextServer.post("/auth/logout");
 };
