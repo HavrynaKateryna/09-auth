@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import css from "./NoteDetails.module.css";
 import { fetchNoteById } from "@/lib/api/clientApi";
-import { Note } from "@/types/note"; // <-- исправлено: импорт типа из types/note
+import { Note } from "@/types/note"; // ✅ правильный импорт
 
 interface NoteDetailsClientProps {
   noteId: string;
@@ -29,11 +29,9 @@ export default function NoteDetailsClient({
       {isLoading && (
         <p>Loading, please wait...</p>
       )}
-
       {!isLoading && error && (
         <p>Something went wrong.</p>
       )}
-
       {!isLoading && !error && data && (
         <div className={css.container}>
           <button

@@ -9,7 +9,7 @@ import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteList from "@/components/NoteList/NoteList";
 import { fetchNotes } from "@/lib/api/clientApi";
-import { Note } from "@/lib/api/clientApi";
+import { Note } from "@/types/note";
 import css from "./NotesPage.module.css";
 
 // Тип данных, которые возвращает fetchNotes
