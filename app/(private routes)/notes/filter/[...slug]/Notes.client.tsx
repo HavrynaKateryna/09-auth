@@ -34,10 +34,11 @@ export default function NotesClient({
   const { data, isLoading, isError, isFetching } =
     useQuery<FetchNotesResponse>({
       queryKey: ["notes", { query, page, tag }],
-      queryFn: () => fetchNotes(query, page, tag),
+      queryFn: () =>
+        fetchNotes({ query, page, tag }), // Передаем объект с параметрами
       refetchOnMount: false,
       retry: false,
-      keepPreviousData: true,
+      keepPreviousData: true, // правильно внутри useQuery
     });
 
   const notes = data?.notes ?? [];
